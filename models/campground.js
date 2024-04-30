@@ -11,4 +11,4 @@ const campgroundSchema = new Schema({
 });
 
 // スキーマ定義のエクスポート
-exports = mongoose.model('Campground', campgroundSchema);
+module.exports = mongoose.model('Campground', campgroundSchema);
