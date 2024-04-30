@@ -3,6 +3,17 @@ const path = require('path');
 const express = require('express');
 const app = express();
 const port = 3000;
+const mongoose = require('mongoose');
+
+// 接続が成功したか否か確認
+mongoose.connect('mongodb://localhost:27017/movieApp', {useNewUrlParser: true, useUnifiedTopology: true})
+.then(() => {
+    console.log('接続に成功しました！！');
+})
+.catch((err) => {
+    console.log('接続エラー！！');
+    console.log(err);
+});
 
 // 静的ファイルの適用
 app.use(express.static(path.join(__dirname, 'public')));
