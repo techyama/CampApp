@@ -83,5 +83,15 @@ app.put('/campgrounds/:id', async (req, res) => {
     // パスパラメータのIDを持つデータをフォームから受け取った値で更新
     const id = req.params.id;
     const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
+    // 更新したデータの詳細ページへリダイレクト
     res.redirect(`/campgrounds/${campground._id}`);
+});
+
+// 削除
+app.delete('/campgrounds/:id', async (req, res) => {
+    // パスパラメータのIDを持つデータを削除
+    const id = req.params.id;
+    await Campground.findByIdAndDelete(id);
+    // 一覧ページへ
+    res.redirect('/campgrounds');
 });
