@@ -1,6 +1,7 @@
 // モジュールのインポート
 const path = require('path');
 const express = require('express');
+const methodOverride = require('method-override');
 const app = express();
 const port = 3000;
 const mongoose = require('mongoose');
@@ -23,6 +24,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // リクエストボディのパース有効化
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// オーバーライドミドルウェアの宣言
+app.use(methodOverride('_method'));
 
 // viewsディレクトリの設定
 app.set('views', path.join(__dirname, 'views'));
@@ -64,5 +68,20 @@ app.post('/campgrounds', async (req, res) => {
     const campground = new Campground(req.body.campground);
     await campground.save();
     // 登録したデータの詳細ページへリダイレクト
+    res.redirect(`/campgrounds/${campground._id}`);
+});
+
+// 更新ページ
+app.get('/campgrounds/:id/edit', async (req, res) => {
+    // パスパラメータで受け取った値で検索
+    const campground = await Campground.findById(req.params.id);
+    res.render('campgrounds/edit', { campground });
+});
+
+// 更新
+app.put('/campgrounds/:id', async (req, res) => {
+    // パスパラメータのIDを持つデータをフォームから受け取った値で更新
+    const id = req.params.id;
+    const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
     res.redirect(`/campgrounds/${campground._id}`);
 });
