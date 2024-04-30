@@ -1,12 +1,14 @@
-// モジュールのインストール
+// モジュールのインポート
 const path = require('path');
 const express = require('express');
 const app = express();
 const port = 3000;
 const mongoose = require('mongoose');
+// モデルのインポート
+const Campground = require('./models/campground');
 
 // 接続が成功したか否か確認
-mongoose.connect('mongodb://localhost:27017/movieApp', {useNewUrlParser: true, useUnifiedTopology: true})
+mongoose.connect('mongodb://localhost:27017/campApp', {useNewUrlParser: true, useUnifiedTopology: true})
 .then(() => {
     console.log('接続に成功しました！！');
 })
@@ -36,4 +38,10 @@ app.listen(port, () => {
 // ルーティング
 app.get('/', (req, res) => {
     res.render('home');
+});
+
+// キャンプデータの一覧取得
+app.get('/campgrounds', async (req, res) => {
+    const campgrounds = await Campground.find({});
+    res.render('campgrounds/index', { campgrounds });
 });
