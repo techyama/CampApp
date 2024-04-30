@@ -40,14 +40,29 @@ app.get('/', (req, res) => {
     res.render('home');
 });
 
-// キャンプデータの一覧取得
+// 一覧取得ページ
 app.get('/campgrounds', async (req, res) => {
     const campgrounds = await Campground.find({});
     res.render('campgrounds/index', { campgrounds });
 });
 
-// キャンプデータの詳細取得
+// 新規登録ページ
+app.get('/campgrounds/new', (req, res) => {
+    res.render('campgrounds/new');
+});
+
+// 詳細ページ
 app.get('/campgrounds/:id', async (req, res) => {
+    // パスパラメータで受け取った値で検索
     const campground = await Campground.findById(req.params.id);
     res.render('campgrounds/show', { campground });
+});
+
+// 新規登録
+app.post('/campgrounds', async (req, res) => {
+    // フォームから受け取った値で登録
+    const campground = new Campground(req.body.campground);
+    await campground.save();
+    // 登録したデータの詳細ページへリダイレクト
+    res.redirect(`/campgrounds/${campground._id}`);
 });
