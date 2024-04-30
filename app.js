@@ -2,6 +2,7 @@
 const path = require('path');
 const express = require('express');
 const methodOverride = require('method-override');
+const ejsMate = require('ejs-mate');
 const app = express();
 const port = 3000;
 const mongoose = require('mongoose');
@@ -28,6 +29,8 @@ app.use(express.json());
 // オーバーライドミドルウェアの宣言
 app.use(methodOverride('_method'));
 
+// 使用エンジンの設定(EJSを使うときはejs-mateを使う)
+app.engine('ejs', ejsMate);
 // viewsディレクトリの設定
 app.set('views', path.join(__dirname, 'views'));
 // テンプレートエンジンの宣言(EJS)
