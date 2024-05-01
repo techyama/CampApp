@@ -3,6 +3,7 @@ const path = require('path');
 const express = require('express');
 const methodOverride = require('method-override');
 const ejsMate = require('ejs-mate');
+const { campgroundSchema } = require('./schemas');
 const catchAsync = require('./utils/catchAsync');
 const expressErrpr = require('./utils/ExpressError');
 const app = express();
@@ -39,6 +40,17 @@ app.set('views', path.join(__dirname, 'views'));
 // テンプレートエンジンの宣言(EJS)
 app.set('view engine', 'ejs');
 
+// バリデーションミドルウェア
+const validateCampground = (req, res, next) => {
+    const { error } = campgroundSchema.validate(req.body);
+    if (error) {
+        const msg = error.details.map(detail => detail.message).join(',');
+        throw new ExpressError(msg, 400);
+    } else {
+        next();
+    }
+};
+
 // サーバー起動
 app.listen(port, () => {
     console.log(`ポート${port}でリクエスト待受中...`);
@@ -69,9 +81,7 @@ app.get('/campgrounds/:id', catchAsync(async (req, res) => {
 }));
 
 // 新規登録
-app.post('/campgrounds', catchAsync(async (req, res) => {
-    // 不正なリクエストがあったときthrow
-    if (!req.body.Campground) throw new ExpressError('不正なキャンプ場のデータです', 400);
+app.post('/campgrounds', validateCampground, catchAsync(async (req, res) => {
     // フォームから受け取った値で登録
     const campground = new Campground(req.body.campground);
     await campground.save();
@@ -80,14 +90,14 @@ app.post('/campgrounds', catchAsync(async (req, res) => {
 }));
 
 // 更新ページ
-app.get('/campgrounds/:id/edit', catchAsync(async (req, res) => {
+app.get('/campgrounds/:id/edit', validateCampground, catchAsync(async (req, res) => {
     // パスパラメータで受け取った値で検索
     const campground = await Campground.findById(req.params.id);
     res.render('campgrounds/edit', { campground });
 }));
 
 // 更新
-app.put('/campgrounds/:id', catchAsync(async (req, res) => {
+app.put('/campgrounds/:id', validateCampground, catchAsync(async (req, res) => {
     // パスパラメータのIDを持つデータをフォームから受け取った値で更新
     const id = req.params.id;
     const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
@@ -96,7 +106,7 @@ app.put('/campgrounds/:id', catchAsync(async (req, res) => {
 }));
 
 // 削除
-app.delete('/campgrounds/:id', catchAsync(async (req, res) => {
+app.delete('/campgrounds/:id', validateCampground, catchAsync(async (req, res) => {
     // パスパラメータのIDを持つデータを削除
     const id = req.params.id;
     await Campground.findByIdAndDelete(id);
