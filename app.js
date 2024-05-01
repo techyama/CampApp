@@ -3,11 +3,15 @@ const path = require('path');
 const express = require('express');
 const methodOverride = require('method-override');
 const ejsMate = require('ejs-mate');
+const { campgroundSchema } = require('./schemas');
+const catchAsync = require('./utils/catchAsync');
+const expressErrpr = require('./utils/ExpressError');
 const app = express();
 const port = 3000;
 const mongoose = require('mongoose');
 // モデルのインポート
 const Campground = require('./models/campground');
+const ExpressError = require('./utils/ExpressError');
 
 // 接続が成功したか否か確認
 mongoose.connect('mongodb://localhost:27017/campApp', {useNewUrlParser: true, useUnifiedTopology: true})
@@ -36,6 +40,17 @@ app.set('views', path.join(__dirname, 'views'));
 // テンプレートエンジンの宣言(EJS)
 app.set('view engine', 'ejs');
 
+// バリデーションミドルウェア
+const validateCampground = (req, res, next) => {
+    const { error } = campgroundSchema.validate(req.body);
+    if (error) {
+        const msg = error.details.map(detail => detail.message).join(',');
+        throw new ExpressError(msg, 400);
+    } else {
+        next();
+    }
+};
+
 // サーバー起動
 app.listen(port, () => {
     console.log(`ポート${port}でリクエスト待受中...`);
@@ -48,10 +63,10 @@ app.get('/', (req, res) => {
 });
 
 // 一覧取得ページ
-app.get('/campgrounds', async (req, res) => {
+app.get('/campgrounds', catchAsync(async (req, res) => {
     const campgrounds = await Campground.find({});
     res.render('campgrounds/index', { campgrounds });
-});
+}));
 
 // 新規登録ページ
 app.get('/campgrounds/new', (req, res) => {
@@ -59,42 +74,54 @@ app.get('/campgrounds/new', (req, res) => {
 });
 
 // 詳細ページ
-app.get('/campgrounds/:id', async (req, res) => {
+app.get('/campgrounds/:id', catchAsync(async (req, res) => {
     // パスパラメータで受け取った値で検索
     const campground = await Campground.findById(req.params.id);
     res.render('campgrounds/show', { campground });
-});
+}));
 
 // 新規登録
-app.post('/campgrounds', async (req, res) => {
+app.post('/campgrounds', validateCampground, catchAsync(async (req, res) => {
     // フォームから受け取った値で登録
     const campground = new Campground(req.body.campground);
     await campground.save();
     // 登録したデータの詳細ページへリダイレクト
     res.redirect(`/campgrounds/${campground._id}`);
-});
+}));
 
 // 更新ページ
-app.get('/campgrounds/:id/edit', async (req, res) => {
+app.get('/campgrounds/:id/edit', validateCampground, catchAsync(async (req, res) => {
     // パスパラメータで受け取った値で検索
     const campground = await Campground.findById(req.params.id);
     res.render('campgrounds/edit', { campground });
-});
+}));
 
 // 更新
-app.put('/campgrounds/:id', async (req, res) => {
+app.put('/campgrounds/:id', validateCampground, catchAsync(async (req, res) => {
     // パスパラメータのIDを持つデータをフォームから受け取った値で更新
     const id = req.params.id;
     const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
     // 更新したデータの詳細ページへリダイレクト
     res.redirect(`/campgrounds/${campground._id}`);
-});
+}));
 
 // 削除
-app.delete('/campgrounds/:id', async (req, res) => {
+app.delete('/campgrounds/:id', validateCampground, catchAsync(async (req, res) => {
     // パスパラメータのIDを持つデータを削除
     const id = req.params.id;
     await Campground.findByIdAndDelete(id);
     // 一覧ページへ
     res.redirect('/campgrounds');
+}));
+
+
+// 意図しないパスにリクエストがあったとき
+app.all('*', (req, res, next) => {
+    next(new ExpressError('ページが見つかりませんでした', 404));
+});
+
+// エラーハンドル用ミドルウェア
+app.use((err, req, res, next) => {
+    const { message = '問題が起きました', statusCode = 500 } = err;
+    res.status(statusCode).render('error', { err });
 });
