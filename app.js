@@ -113,5 +113,5 @@ app.all('*', (req, res, next) => {
 // エラーハンドル用ミドルウェア
 app.use((err, req, res, next) => {
     const { message = '問題が起きました', statusCode = 500 } = err;
-    res.status(statusCode).send(message);
+    res.status(statusCode).render('error', { err });
 });
