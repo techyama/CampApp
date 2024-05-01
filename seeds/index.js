@@ -26,10 +26,15 @@ const seedDB = async () => {
     for (let i= 0; i < 50; i++) {
         // ランダムなインデックスを振る
         const randomCityIndex = Math.floor(Math.random() * cities.length);
+        // 1000～3000までのランダムな数値を振る
+        const price = Math.floor(Math.random() * 2000) + 1000;
         // データを挿入用に加工してインスタンスに代入
         const camp = new Campground({
             location: `${cities[randomCityIndex].prefecture}${cities[randomCityIndex].city}`,
-            title: `${randomValue(descriptors)}・${randomValue(places)}`
+            title: `${randomValue(descriptors)}・${randomValue(places)}`,
+            image: 'https://source.unsplash.com/collection/483251',
+            description: '木曾路はすべて山の中である。あるところは岨づたいに行く崖の道であり、あるところは数十間の深さに臨む木曾川の岸であり、あるところは山の尾をめぐる谷の入り口である。一筋の街道はこの深い森林地帯を貫いていた。東ざかいの桜沢から、西の十曲峠まで、木曾十一宿はこの街道に添うて、二十二里余にわたる長い谿谷の間に散在していた。道路の位置も幾たびか改まったもので、古道はいつのまにか深い山間に埋もれた。',
+            price
         });
         await camp.save();
     }
