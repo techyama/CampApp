@@ -134,7 +134,6 @@ app.post('/campgrounds/:id/reviews', validateReview, catchAsync(async (req, res)
     const campground = await Campground.findById(req.params.id);
     // フォームで受け取った値で新しいインスタンス生成
     const review = new Review(req.body.review);
-    console.log(req.body.review);
     // 配列属性にプッシュ
     campground.reviews.push(review);
     // それぞれ登録
@@ -142,6 +141,17 @@ app.post('/campgrounds/:id/reviews', validateReview, catchAsync(async (req, res)
     await campground.save();
     // 更新したデータの詳細ページへリダイレクト
     res.redirect(`/campgrounds/${campground._id}`);
+}));
+
+// レビュー削除
+app.delete('/campgrounds/:id/reviews/:reviewId', catchAsync(async (req, res) => {
+    // パスパラメータから分割代入
+    const { id, reviewId } = req.params;
+    // 配列属性から条件に一致する要素を削除
+    await Campground.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
+    await Review.findByIdAndDelete(reviewId);
+    // 更新したデータの詳細ページへリダイレクト
+    res.redirect(`/campgrounds/${id}`);
 }));
 
 
