@@ -3,7 +3,7 @@ const path = require('path');
 const express = require('express');
 const methodOverride = require('method-override');
 const ejsMate = require('ejs-mate');
-const { campgroundSchema, reviewsSchema } = require('./schemas');
+const { campgroundSchema, reviewSchema } = require('./schemas');
 const catchAsync = require('./utils/catchAsync');
 const expressErrpr = require('./utils/ExpressError');
 const app = express();
@@ -56,7 +56,7 @@ const validateCampground = (req, res, next) => {
 
 // レビューデータ用
 const validateReview = (req, res, next) => {
-    const { error } = reviewsSchema.validate(req.body);
+    const { error } = reviewSchema.validate(req.body);
     if (error) {
         const msg = error.details.map(detail => detail.message).join(',');
         throw new ExpressError(msg, 400);
@@ -89,8 +89,8 @@ app.get('/campgrounds/new', (req, res) => {
 
 // 詳細ページ
 app.get('/campgrounds/:id', catchAsync(async (req, res) => {
-    // パスパラメータで受け取った値で検索
-    const campground = await Campground.findById(req.params.id);
+    // パスパラメータで受け取った値で検索(IDに紐づくreviewデータも取得)
+    const campground = await Campground.findById(req.params.id).populate('reviews');
     res.render('campgrounds/show', { campground });
 }));
 
