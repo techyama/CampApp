@@ -8,7 +8,12 @@ const campgroundSchema = new Schema({
     image: String,
     price: Number,
     description: String,
-    location: String
+    location: String,
+    // reviewスキーマのリレーション
+    reviews: {
+        type: Schema.Types.ObjectId,
+        ref: 'Review'
+    }
 });
 
 // スキーマ定義のエクスポート
