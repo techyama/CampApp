@@ -10,10 +10,12 @@ const campgroundSchema = new Schema({
     description: String,
     location: String,
     // reviewスキーマのリレーション
-    reviews: {
-        type: Schema.Types.ObjectId,
-        ref: 'Review'
-    }
+    reviews: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Review'
+        }
+    ]
 });
 
 // スキーマ定義のエクスポート

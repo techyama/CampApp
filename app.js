@@ -3,7 +3,7 @@ const path = require('path');
 const express = require('express');
 const methodOverride = require('method-override');
 const ejsMate = require('ejs-mate');
-const { campgroundSchema } = require('./schemas');
+const { campgroundSchema, reviewsSchema } = require('./schemas');
 const catchAsync = require('./utils/catchAsync');
 const expressErrpr = require('./utils/ExpressError');
 const app = express();
@@ -11,7 +11,9 @@ const port = 3000;
 const mongoose = require('mongoose');
 // モデルのインポート
 const Campground = require('./models/campground');
+const Review = require('./models/review');
 const ExpressError = require('./utils/ExpressError');
+const { redirect } = require('statuses');
 
 // 接続が成功したか否か確認
 mongoose.connect('mongodb://localhost:27017/campApp', {useNewUrlParser: true, useUnifiedTopology: true})
@@ -41,8 +43,20 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 // バリデーションミドルウェア
+// キャンプデータ用
 const validateCampground = (req, res, next) => {
     const { error } = campgroundSchema.validate(req.body);
+    if (error) {
+        const msg = error.details.map(detail => detail.message).join(',');
+        throw new ExpressError(msg, 400);
+    } else {
+        next();
+    }
+};
+
+// レビューデータ用
+const validateReview = (req, res, next) => {
+    const { error } = reviewsSchema.validate(req.body);
     if (error) {
         const msg = error.details.map(detail => detail.message).join(',');
         throw new ExpressError(msg, 400);
@@ -90,7 +104,7 @@ app.post('/campgrounds', validateCampground, catchAsync(async (req, res) => {
 }));
 
 // 更新ページ
-app.get('/campgrounds/:id/edit', validateCampground, catchAsync(async (req, res) => {
+app.get('/campgrounds/:id/edit', catchAsync(async (req, res) => {
     // パスパラメータで受け取った値で検索
     const campground = await Campground.findById(req.params.id);
     res.render('campgrounds/edit', { campground });
@@ -106,12 +120,28 @@ app.put('/campgrounds/:id', validateCampground, catchAsync(async (req, res) => {
 }));
 
 // 削除
-app.delete('/campgrounds/:id', validateCampground, catchAsync(async (req, res) => {
+app.delete('/campgrounds/:id', catchAsync(async (req, res) => {
     // パスパラメータのIDを持つデータを削除
     const id = req.params.id;
     await Campground.findByIdAndDelete(id);
     // 一覧ページへ
     res.redirect('/campgrounds');
+}));
+
+// レビュー投稿
+app.post('/campgrounds/:id/reviews', validateReview, catchAsync(async (req, res) => {
+    // パスパラメータのIDを持つデータを取得
+    const campground = await Campground.findById(req.params.id);
+    // フォームで受け取った値で新しいインスタンス生成
+    const review = new Review(req.body.review);
+    console.log(req.body.review);
+    // 配列属性にプッシュ
+    campground.reviews.push(review);
+    // それぞれ登録
+    await review.save();
+    await campground.save();
+    // 更新したデータの詳細ページへリダイレクト
+    res.redirect(`/campgrounds/${campground._id}`);
 }));
 
 

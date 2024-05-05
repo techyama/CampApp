@@ -1,5 +1,6 @@
 // モジュールのインポート
 const Joi = require('joi');
+const review = require('./models/review');
 
 // バリデーションスキーマの定義をエクスポート
 module.exports.campgroundSchema = Joi.object({
@@ -9,5 +10,12 @@ module.exports.campgroundSchema = Joi.object({
         image: Joi.string().required(),
         location: Joi.string().required(),
         description: Joi.string().required()
+    }).required()
+});
+
+module.exports.reviewsSchema = Joi.object({
+    review: Joi.object({
+        rating: Joi.number().required().min(1).max(5),
+        body: Joi.string().required()
     }).required()
 });
