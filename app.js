@@ -3,18 +3,28 @@ const path = require('path');
 const express = require('express');
 const methodOverride = require('method-override');
 const ejsMate = require('ejs-mate');
-const { campgroundSchema } = require('./schemas');
-const catchAsync = require('./utils/catchAsync');
-const expressErrpr = require('./utils/ExpressError');
+// セッションモジュールインポート
+const session = require('express-session');
+// フラッシュモジュールインポート
+const flash = require('connect-flash');
 const app = express();
 const port = 3000;
 const mongoose = require('mongoose');
 // モデルのインポート
-const Campground = require('./models/campground');
 const ExpressError = require('./utils/ExpressError');
+const { redirect } = require('statuses');
+// ルーティングのインポート
+const campgroundRoutes = require('./routes/campgrounds');
+const reviewRoutes = require('./routes/reviews');
 
 // 接続が成功したか否か確認
-mongoose.connect('mongodb://localhost:27017/campApp', {useNewUrlParser: true, useUnifiedTopology: true})
+mongoose.connect('mongodb://localhost:27017/campApp', {
+    // オプション
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+    useFindAndModify: false
+})
 .then(() => {
     console.log('接続に成功しました！！');
 })
@@ -40,16 +50,32 @@ app.set('views', path.join(__dirname, 'views'));
 // テンプレートエンジンの宣言(EJS)
 app.set('view engine', 'ejs');
 
-// バリデーションミドルウェア
-const validateCampground = (req, res, next) => {
-    const { error } = campgroundSchema.validate(req.body);
-    if (error) {
-        const msg = error.details.map(detail => detail.message).join(',');
-        throw new ExpressError(msg, 400);
-    } else {
-        next();
+// セッション有効化
+const sessionConfig = {
+    // 本来は秘密鍵が好ましい
+    secret: 'mysecret',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        // HTTP接続のみ受け付ける
+        httpOnly: true,
+        // 有効期限(ミリ秒)7日
+        maxAge: 1000 * 60 * 60 * 24 * 7
     }
 };
+app.use(session(sessionConfig));
+
+// フラッシュの有効化
+app.use(flash());
+
+// フラッシュ用ミドルウェア
+app.use((req, res, next) => {
+    // ライフサイクルの間レスポンスプロパティにリクエストプロパティの値を保持する
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
+});
+
 
 // サーバー起動
 app.listen(port, () => {
@@ -62,57 +88,11 @@ app.get('/', (req, res) => {
     res.render('home');
 });
 
-// 一覧取得ページ
-app.get('/campgrounds', catchAsync(async (req, res) => {
-    const campgrounds = await Campground.find({});
-    res.render('campgrounds/index', { campgrounds });
-}));
 
-// 新規登録ページ
-app.get('/campgrounds/new', (req, res) => {
-    res.render('campgrounds/new');
-});
-
-// 詳細ページ
-app.get('/campgrounds/:id', catchAsync(async (req, res) => {
-    // パスパラメータで受け取った値で検索
-    const campground = await Campground.findById(req.params.id);
-    res.render('campgrounds/show', { campground });
-}));
-
-// 新規登録
-app.post('/campgrounds', validateCampground, catchAsync(async (req, res) => {
-    // フォームから受け取った値で登録
-    const campground = new Campground(req.body.campground);
-    await campground.save();
-    // 登録したデータの詳細ページへリダイレクト
-    res.redirect(`/campgrounds/${campground._id}`);
-}));
-
-// 更新ページ
-app.get('/campgrounds/:id/edit', validateCampground, catchAsync(async (req, res) => {
-    // パスパラメータで受け取った値で検索
-    const campground = await Campground.findById(req.params.id);
-    res.render('campgrounds/edit', { campground });
-}));
-
-// 更新
-app.put('/campgrounds/:id', validateCampground, catchAsync(async (req, res) => {
-    // パスパラメータのIDを持つデータをフォームから受け取った値で更新
-    const id = req.params.id;
-    const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
-    // 更新したデータの詳細ページへリダイレクト
-    res.redirect(`/campgrounds/${campground._id}`);
-}));
-
-// 削除
-app.delete('/campgrounds/:id', validateCampground, catchAsync(async (req, res) => {
-    // パスパラメータのIDを持つデータを削除
-    const id = req.params.id;
-    await Campground.findByIdAndDelete(id);
-    // 一覧ページへ
-    res.redirect('/campgrounds');
-}));
+// ルーティングミドルウェアを使用
+app.use('/campgrounds', campgroundRoutes);
+// パラメータをルーティングファイルで使うために設定必要
+app.use('/campgrounds/:id/reviews', reviewRoutes);
 
 
 // 意図しないパスにリクエストがあったとき
