@@ -35,6 +35,11 @@ router.get('/new', (req, res) => {
 router.get('/:id', catchAsync(async (req, res) => {
     // パスパラメータで受け取った値で検索(IDに紐づくreviewデータも取得)
     const campground = await Campground.findById(req.params.id).populate('reviews');
+    // データが存在しないとき一覧ページへリダイレクト
+    if (!campground) {
+        req.flash('error', 'キャンプ場は見つかりませんでした');
+        res.redirect('/campgrounds');
+    }
     res.render('campgrounds/show', { campground });
 }));
 
