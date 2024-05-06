@@ -3,6 +3,8 @@ const path = require('path');
 const express = require('express');
 const methodOverride = require('method-override');
 const ejsMate = require('ejs-mate');
+// セッションモジュールインポート
+const session = require('express-session');
 const app = express();
 const port = 3000;
 const mongoose = require('mongoose');
@@ -46,6 +48,20 @@ app.set('views', path.join(__dirname, 'views'));
 // テンプレートエンジンの宣言(EJS)
 app.set('view engine', 'ejs');
 
+// セッション有効化
+const sessionConfig = {
+    // 本来は秘密鍵が好ましい
+    secret: 'mysecret',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        // HTTP接続のみ受け付ける
+        httpOnly: true,
+        // 有効期限(ミリ秒)7日
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    }
+};
+app.use(session(sessionConfig));
 
 // サーバー起動
 app.listen(port, () => {
