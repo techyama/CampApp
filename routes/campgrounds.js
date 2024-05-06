@@ -43,6 +43,8 @@ router.post('/', validateCampground, catchAsync(async (req, res) => {
     // フォームから受け取った値で登録
     const campground = new Campground(req.body.campground);
     await campground.save();
+    // 保存成功時フラッシュ表示
+    req.flash('success', '新しいキャンプ場を登録しました');
     // 登録したデータの詳細ページへリダイレクト
     res.redirect(`/campgrounds/${campground._id}`);
 }));
@@ -59,6 +61,8 @@ router.put('/:id', validateCampground, catchAsync(async (req, res) => {
     // パスパラメータのIDを持つデータをフォームから受け取った値で更新
     const id = req.params.id;
     const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
+    // 更新成功時フラッシュ表示
+    req.flash('success', 'キャンプ場を更新しました');
     // 更新したデータの詳細ページへリダイレクト
     res.redirect(`/campgrounds/${campground._id}`);
 }));
@@ -68,6 +72,8 @@ router.delete('/:id', catchAsync(async (req, res) => {
     // パスパラメータのIDを持つデータを削除
     const id = req.params.id;
     await Campground.findByIdAndDelete(id);
+    // 削除成功時フラッシュ表示
+    req.flash('success', 'キャンプ場を削除しました');
     // 一覧ページへ
     res.redirect('/campgrounds');
 }));

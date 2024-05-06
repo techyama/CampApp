@@ -5,6 +5,8 @@ const methodOverride = require('method-override');
 const ejsMate = require('ejs-mate');
 // セッションモジュールインポート
 const session = require('express-session');
+// フラッシュモジュールインポート
+const flash = require('connect-flash');
 const app = express();
 const port = 3000;
 const mongoose = require('mongoose');
@@ -62,6 +64,17 @@ const sessionConfig = {
     }
 };
 app.use(session(sessionConfig));
+
+// フラッシュの有効化
+app.use(flash());
+
+// フラッシュ用ミドルウェア
+app.use((req, res, next) => {
+    // ライフサイクルの間successプロパティにリクエストのsuccessプロパティの値を保持する
+    res.locals.success = req.flash('success');
+    next();
+});
+
 
 // サーバー起動
 app.listen(port, () => {

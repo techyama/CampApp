@@ -33,6 +33,8 @@ router.post('/', validateReview, catchAsync(async (req, res) => {
     // それぞれ登録
     await review.save();
     await campground.save();
+    // 登録成功時フラッシュ表示
+    req.flash('success', 'レビューを登録しました');
     // 更新したデータの詳細ページへリダイレクト
     res.redirect(`/campgrounds/${campground._id}`);
 }));
@@ -44,6 +46,8 @@ router.delete('/:reviewId', catchAsync(async (req, res) => {
     // 配列属性から条件に一致する要素を削除
     await Campground.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
     await Review.findByIdAndDelete(reviewId);
+    // 登録成功時フラッシュ表示
+    req.flash('success', 'レビューを削除しました');
     // 更新したデータの詳細ページへリダイレクト
     res.redirect(`/campgrounds/${id}`);
 }));
