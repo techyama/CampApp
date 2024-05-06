@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const catchAsync = require('../utils/catchAsync');
-const expressErrpr = require('../utils/ExpressError');
+const ExpressError = require('../utils/ExpressError');
 const { campgroundSchema } = require('../schemas');
 // モデルのインポート
 const Campground = require('../models/campground');

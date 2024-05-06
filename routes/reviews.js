@@ -3,7 +3,7 @@ const express = require('express');
 // 呼び出し元で定義されたパラメータを有効にする
 const router = express.Router({ mergeParams: true });
 const catchAsync = require('../utils/catchAsync');
-const expressErrpr = require('../utils/ExpressError');
+const ExpressError = require('../utils/ExpressError');
 const { reviewSchema } = require('../schemas');
 // モデルのインポート
 const Campground = require('../models/campground');
