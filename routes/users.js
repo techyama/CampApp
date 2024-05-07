@@ -1,6 +1,7 @@
 // モジュールのインポート
 const express = require('express');
 const router = express.Router();
+const passport = require('passport');
 // モデルのインポート
 const User = require('../models/user');
 
@@ -10,7 +11,7 @@ router.get('/register', (req, res) => {
 });
 
 // アカウント登録
-router.post('/register',　async (req, res) => {
+router.post('/register', async (req, res) => {
     try {
         // フォームデータを分割代入
         const { email, username, password } = req.body;
@@ -28,6 +29,18 @@ router.post('/register',　async (req, res) => {
         // アカウント登録画面へリダイレクト
         res.redirect('/register');
     }
+});
+
+// ログイン画面
+router.get('/login', (req, res) => {
+    res.render('users/login');
+});
+
+// ログイン
+router.post('/login', passport.authenticate('local', {failureFlash: true, failureRedirect: '/login'}), async (req, res) => {
+    req.flash('success', 'ログインしました');
+    // ホーム画面へリダイレクト
+    res.redirect('/')
 });
 
 
