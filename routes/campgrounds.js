@@ -6,6 +6,8 @@ const ExpressError = require('../utils/ExpressError');
 const { campgroundSchema } = require('../schemas');
 // モデルのインポート
 const Campground = require('../models/campground');
+// ミドルウェアのインポート
+const { isLoggedIn } = require('../middleware');
 
 // バリデーションミドルウェア
 // キャンプデータ用
@@ -27,7 +29,7 @@ router.get('/', catchAsync(async (req, res) => {
 }));
 
 // 新規登録ページ
-router.get('/new', (req, res) => {
+router.get('/new', isLoggedIn, (req, res) => {
     res.render('campgrounds/new');
 });
 
@@ -44,7 +46,7 @@ router.get('/:id', catchAsync(async (req, res) => {
 }));
 
 // 新規登録
-router.post('/', validateCampground, catchAsync(async (req, res) => {
+router.post('/', isLoggedIn, validateCampground, catchAsync(async (req, res) => {
     // フォームから受け取った値で登録
     const campground = new Campground(req.body.campground);
     await campground.save();
@@ -55,14 +57,14 @@ router.post('/', validateCampground, catchAsync(async (req, res) => {
 }));
 
 // 更新ページ
-router.get('/:id/edit', catchAsync(async (req, res) => {
+router.get('/:id/edit', isLoggedIn, catchAsync(async (req, res) => {
     // パスパラメータで受け取った値で検索
     const campground = await Campground.findById(req.params.id);
     res.render('campgrounds/edit', { campground });
 }));
 
 // 更新
-router.put('/:id', validateCampground, catchAsync(async (req, res) => {
+router.put('/:id', isLoggedIn, validateCampground, catchAsync(async (req, res) => {
     // パスパラメータのIDを持つデータをフォームから受け取った値で更新
     const id = req.params.id;
     const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
@@ -73,7 +75,7 @@ router.put('/:id', validateCampground, catchAsync(async (req, res) => {
 }));
 
 // 削除
-router.delete('/:id', catchAsync(async (req, res) => {
+router.delete('/:id', isLoggedIn, catchAsync(async (req, res) => {
     // パスパラメータのIDを持つデータを削除
     const id = req.params.id;
     await Campground.findByIdAndDelete(id);
