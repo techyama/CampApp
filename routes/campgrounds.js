@@ -8,26 +8,30 @@ const campgrounds = require('../controllers/campgrounds');
 const { isLoggedIn, isCampAuthor, validateCampground } = require('../middleware');
 
 
-// 一覧取得ページ
-router.get('/', catchAsync(campgrounds.index));
+router.route('/')
+    // 一覧取得ページ
+    .get(catchAsync(campgrounds.index))
+    // 新規登録
+    .post(isLoggedIn, validateCampground, catchAsync(campgrounds.createCampground));
+
+
 
 // 新規登録ページ
 router.get('/new', isLoggedIn, campgrounds.renderNewForm);
 
-// 詳細ページ
-router.get('/:id', catchAsync(campgrounds.showCampground));
 
-// 新規登録
-router.post('/', isLoggedIn, validateCampground, catchAsync(campgrounds.createCampground));
+router.route('/:id')
+    // 詳細ページ
+    .get(catchAsync(campgrounds.showCampground))
+    // 編集
+    .put(isLoggedIn, isCampAuthor, validateCampground, catchAsync(campgrounds.updateCampground))
+    // 削除
+    .delete(isLoggedIn, isCampAuthor, catchAsync(campgrounds.deleteCampground));
+
+
 
 // 編集ページ
 router.get('/:id/edit', isLoggedIn, isCampAuthor, catchAsync(campgrounds.renderEditForm));
-
-// 編集
-router.put('/:id', isLoggedIn, isCampAuthor, validateCampground, catchAsync(campgrounds.updateCampground));
-
-// 削除
-router.delete('/:id', isLoggedIn, isCampAuthor, catchAsync(campgrounds.deleteCampground));
 
 
 // モジュールのエクスポート
