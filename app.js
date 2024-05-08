@@ -86,6 +86,7 @@ app.use(flash());
 // フラッシュ用ミドルウェア
 app.use((req, res, next) => {
     // ライフサイクルの間レスポンスプロパティにリクエストプロパティの値を保持する
+    res.locals.currentUser = req.user;
     res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
     next();
