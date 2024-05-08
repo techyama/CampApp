@@ -43,6 +43,16 @@ router.post('/login', passport.authenticate('local', {failureFlash: true, failur
     res.redirect('/')
 });
 
+// ログアウト
+router.get('/logout', (req, res) => {
+    req.logout(function(err) {
+        if(err) { return nextTick(err); }
+        req.flash('success', 'ログアウトしました');
+        // ログイン画面へリダイレクト
+        res.redirect('/login');
+    });
+});
+
 
 // モジュールのエクスポート
 module.exports = router;
