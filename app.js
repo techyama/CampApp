@@ -16,6 +16,11 @@ const { redirect } = require('statuses');
 // ルーティングのインポート
 const campgroundRoutes = require('./routes/campgrounds');
 const reviewRoutes = require('./routes/reviews');
+const userRoutes = require('./routes/users');
+// 認証・認可ライブラリとモデルのインポート
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+const User = require('./models/user');
 
 // 接続が成功したか否か確認
 mongoose.connect('mongodb://localhost:27017/campApp', {
@@ -65,12 +70,23 @@ const sessionConfig = {
 };
 app.use(session(sessionConfig));
 
+// 認証用ミドルウェア
+app.use(passport.initialize());
+app.use(passport.session());
+// モデルに定義された情報で認証情報を設定
+passport.use(new LocalStrategy(User.authenticate()));
+// ユーザーの情報をセッションに入れるときの設定
+passport.serializeUser(User.serializeUser());
+// セッションからユーザー情報を取り出すときの設定
+passport.deserializeUser(User.deserializeUser());
+
 // フラッシュの有効化
 app.use(flash());
 
 // フラッシュ用ミドルウェア
 app.use((req, res, next) => {
     // ライフサイクルの間レスポンスプロパティにリクエストプロパティの値を保持する
+    res.locals.currentUser = req.user;
     res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
     next();
@@ -90,6 +106,7 @@ app.get('/', (req, res) => {
 
 
 // ルーティングミドルウェアを使用
+app.use('/', userRoutes);
 app.use('/campgrounds', campgroundRoutes);
 // パラメータをルーティングファイルで使うために設定必要
 app.use('/campgrounds/:id/reviews', reviewRoutes);

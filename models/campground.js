@@ -10,6 +10,11 @@ const campgroundSchema = new Schema({
     price: Number,
     description: String,
     location: String,
+    // 投稿ユーザーをリレーション
+    author: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    },
     // reviewスキーマのリレーション
     reviews: [
         {
