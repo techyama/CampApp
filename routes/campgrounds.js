@@ -2,86 +2,36 @@
 const express = require('express');
 const router = express.Router();
 const catchAsync = require('../utils/catchAsync');
-const ExpressError = require('../utils/ExpressError');
-const { campgroundSchema } = require('../schemas');
-// モデルのインポート
-const Campground = require('../models/campground');
-
-// バリデーションミドルウェア
-// キャンプデータ用
-const validateCampground = (req, res, next) => {
-    const { error } = campgroundSchema.validate(req.body);
-    if (error) {
-        const msg = error.details.map(detail => detail.message).join(',');
-        throw new ExpressError(msg, 400);
-    } else {
-        next();
-    }
-};
+// コントローラーのインポート
+const campgrounds = require('../controllers/campgrounds');
+// ミドルウェアのインポート
+const { isLoggedIn, isCampAuthor, validateCampground } = require('../middleware');
 
 
-// 一覧取得ページ
-router.get('/', catchAsync(async (req, res) => {
-    const campgrounds = await Campground.find({});
-    res.render('campgrounds/index', { campgrounds });
-}));
+router.route('/')
+    // 一覧取得ページ
+    .get(catchAsync(campgrounds.index))
+    // 新規登録
+    .post(isLoggedIn, validateCampground, catchAsync(campgrounds.createCampground));
+
+
 
 // 新規登録ページ
-router.get('/new', (req, res) => {
-    res.render('campgrounds/new');
-});
+router.get('/new', isLoggedIn, campgrounds.renderNewForm);
 
-// 詳細ページ
-router.get('/:id', catchAsync(async (req, res) => {
-    // パスパラメータで受け取った値で検索(IDに紐づくreviewデータも取得)
-    const campground = await Campground.findById(req.params.id).populate('reviews');
-    // データが存在しないとき一覧ページへリダイレクト
-    if (!campground) {
-        req.flash('error', 'キャンプ場は見つかりませんでした');
-        res.redirect('/campgrounds');
-    }
-    res.render('campgrounds/show', { campground });
-}));
 
-// 新規登録
-router.post('/', validateCampground, catchAsync(async (req, res) => {
-    // フォームから受け取った値で登録
-    const campground = new Campground(req.body.campground);
-    await campground.save();
-    // 保存成功時フラッシュ表示
-    req.flash('success', '新しいキャンプ場を登録しました');
-    // 登録したデータの詳細ページへリダイレクト
-    res.redirect(`/campgrounds/${campground._id}`);
-}));
+router.route('/:id')
+    // 詳細ページ
+    .get(catchAsync(campgrounds.showCampground))
+    // 編集
+    .put(isLoggedIn, isCampAuthor, validateCampground, catchAsync(campgrounds.updateCampground))
+    // 削除
+    .delete(isLoggedIn, isCampAuthor, catchAsync(campgrounds.deleteCampground));
 
-// 更新ページ
-router.get('/:id/edit', catchAsync(async (req, res) => {
-    // パスパラメータで受け取った値で検索
-    const campground = await Campground.findById(req.params.id);
-    res.render('campgrounds/edit', { campground });
-}));
 
-// 更新
-router.put('/:id', validateCampground, catchAsync(async (req, res) => {
-    // パスパラメータのIDを持つデータをフォームから受け取った値で更新
-    const id = req.params.id;
-    const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
-    // 更新成功時フラッシュ表示
-    req.flash('success', 'キャンプ場を更新しました');
-    // 更新したデータの詳細ページへリダイレクト
-    res.redirect(`/campgrounds/${campground._id}`);
-}));
 
-// 削除
-router.delete('/:id', catchAsync(async (req, res) => {
-    // パスパラメータのIDを持つデータを削除
-    const id = req.params.id;
-    await Campground.findByIdAndDelete(id);
-    // 削除成功時フラッシュ表示
-    req.flash('success', 'キャンプ場を削除しました');
-    // 一覧ページへ
-    res.redirect('/campgrounds');
-}));
+// 編集ページ
+router.get('/:id/edit', isLoggedIn, isCampAuthor, catchAsync(campgrounds.renderEditForm));
 
 
 // モジュールのエクスポート
