@@ -1,6 +1,7 @@
 // モジュールの宣言
 const mongoose = require('mongoose');
 const review = require('./review');
+const { ref } = require('joi');
 const Schema = mongoose.Schema;
 
 // スキーマ定義
@@ -10,6 +11,11 @@ const campgroundSchema = new Schema({
     price: Number,
     description: String,
     location: String,
+    // 投稿ユーザーをリレーション
+    author: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    },
     // reviewスキーマのリレーション
     reviews: [
         {

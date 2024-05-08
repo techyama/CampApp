@@ -30,6 +30,7 @@ const seedDB = async () => {
         const price = Math.floor(Math.random() * 2000) + 1000;
         // データを挿入用に加工してインスタンスに代入
         const camp = new Campground({
+            author: '663b1cd10165177cd4357473',
             location: `${cities[randomCityIndex].prefecture}${cities[randomCityIndex].city}`,
             title: `${randomValue(descriptors)}・${randomValue(places)}`,
             image: 'https://source.unsplash.com/collection/483251',

@@ -35,8 +35,8 @@ router.get('/new', isLoggedIn, (req, res) => {
 
 // 詳細ページ
 router.get('/:id', catchAsync(async (req, res) => {
-    // パスパラメータで受け取った値で検索(IDに紐づくreviewデータも取得)
-    const campground = await Campground.findById(req.params.id).populate('reviews');
+    // パスパラメータで受け取った値で検索(IDに紐づくreviewとuserデータも取得)
+    const campground = await Campground.findById(req.params.id).populate('reviews').populate('author');
     // データが存在しないとき一覧ページへリダイレクト
     if (!campground) {
         req.flash('error', 'キャンプ場は見つかりませんでした');
@@ -49,6 +49,8 @@ router.get('/:id', catchAsync(async (req, res) => {
 router.post('/', isLoggedIn, validateCampground, catchAsync(async (req, res) => {
     // フォームから受け取った値で登録
     const campground = new Campground(req.body.campground);
+    // passportの持つユーザー情報からidをautorプロパティに代入
+    campground.author = req.user._id;
     await campground.save();
     // 保存成功時フラッシュ表示
     req.flash('success', '新しいキャンプ場を登録しました');
