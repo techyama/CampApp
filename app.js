@@ -1,3 +1,8 @@
+// Node.jsの環境変数が本番用で動いていないときに読み込む
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+
 // モジュールのインポート
 const path = require('path');
 const express = require('express');
