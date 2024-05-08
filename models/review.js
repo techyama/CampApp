@@ -5,7 +5,12 @@ const { Schema } = mongoose;
 // スキーマ定義
 const reviewSchema = new Schema({
     body: String,
-    rating: Number
+    rating: Number,
+    // レビュアーのリレーション
+    author: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    }
 });
 
 // スキーマ定義のエクスポート

@@ -12,6 +12,8 @@
               <li class="list-group-item text-muted">登録者：<%= campground.author.username %></li>
               <li class="list-group-item">￥<%= campground.price %>/泊</li>
             </ul>
+            <!-- ログイン済みかつ投稿者のIDとログインユーザーのIDが同じとき -->
+            <% if (currentUser && campground.author.equals(currentUser._id)) { %>
             <div class="card-body">
               <a class="btn btn-info" href="/campgrounds/<%= campground._id %>/edit">編集する</a>
               <!-- Expressで使えるDELETEで送信する -->
@@ -19,12 +21,14 @@
                 <button class="btn btn-danger">削除する</button>
               </form>
             </div>
+            <% } %>
             <div class="card-footer text-muted">2 days ago</div>
           </div>
     </div>
     <div class="col-6">
-      <!-- レビューを投稿するフォーム -->
+      <!-- ログイン状態のみレビューを投稿するフォームを表示 -->
       <h2>レビュー</h2>
+      <% if(currentUser) { %>
       <form action="/campgrounds/<%= campground._id %>/reviews" method="POST" class="mb-3 validated-form" novalidate>
         <div class="mb-3">
           <label class="form-label" for="rating">評価</label>
@@ -39,14 +43,19 @@
         </div>
         <button class="btn btn-success">投稿する</button>
       </form>
-      <% for (let review of campground.reviews) {%>
+      <% } %>
+      <% for (let review of campground.reviews) { %>
         <div class="card mb-3">
           <div class="card-body">
-            <p class="card-title">評価：<%= review.rating %></p>
+            <h5 class="card-title">評価：<%= review.rating %></h5>
+            <h6 class="card-subtitle mb-2 text-muted"><%= review.author.username %></h6>
             <p class="card-text">コメント：<%= review.body %></p>
+            <!-- ログイン済みかつレビュアーのIDとログインユーザーのIDが同じとき -->
+            <% if (currentUser && review.author.equals(currentUser._id)) { %>
             <form action="/campgrounds/<%= campground._id %>/reviews/<%= review._id %>?_method=DELETE" method="POST">
               <button class="btn btn-sm btn-danger">削除する</button>
             </form>
+            <% } %>
           </div>
         </div>        
       <% } %>

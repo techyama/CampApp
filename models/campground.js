@@ -1,7 +1,6 @@
 // モジュールの宣言
 const mongoose = require('mongoose');
 const review = require('./review');
-const { ref } = require('joi');
 const Schema = mongoose.Schema;
 
 // スキーマ定義

@@ -3,31 +3,20 @@ const express = require('express');
 // 呼び出し元で定義されたパラメータを有効にする
 const router = express.Router({ mergeParams: true });
 const catchAsync = require('../utils/catchAsync');
-const ExpressError = require('../utils/ExpressError');
-const { reviewSchema } = require('../schemas');
 // モデルのインポート
 const Campground = require('../models/campground');
 const Review = require('../models/review');
-
-// バリデーションミドルウェア
-// レビューデータ用
-const validateReview = (req, res, next) => {
-    const { error } = reviewSchema.validate(req.body);
-    if (error) {
-        const msg = error.details.map(detail => detail.message).join(',');
-        throw new ExpressError(msg, 400);
-    } else {
-        next();
-    }
-};
+// ミドルウェアのインポート
+const { isLoggedIn, validateReview, isReviewAuthor } = require('../middleware');
 
 
 // レビュー投稿
-router.post('/', validateReview, catchAsync(async (req, res) => {
+router.post('/', isLoggedIn, validateReview, catchAsync(async (req, res) => {
     // パスパラメータのIDを持つデータを取得
     const campground = await Campground.findById(req.params.id);
     // フォームで受け取った値で新しいインスタンス生成
     const review = new Review(req.body.review);
+    review.author = req.user._id;
     // 配列属性にプッシュ
     campground.reviews.push(review);
     // それぞれ登録
@@ -40,7 +29,7 @@ router.post('/', validateReview, catchAsync(async (req, res) => {
 }));
 
 // レビュー削除
-router.delete('/:reviewId', catchAsync(async (req, res) => {
+router.delete('/:reviewId', isLoggedIn, isReviewAuthor, catchAsync(async (req, res) => {
     // パスパラメータから分割代入
     const { id, reviewId } = req.params;
     // 配列属性から条件に一致する要素を削除
