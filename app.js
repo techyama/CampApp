@@ -30,8 +30,12 @@ const User = require('./models/user');
 const mongoSanitize = require('express-mongo-sanitize');
 const helmet = require('helmet');
 
+// atlas接続
+dbUrl = process.env.DB_URL;
+
+// 'mongodb://localhost:27017/campApp'
 // 接続が成功したか否か確認
-mongoose.connect('mongodb://localhost:27017/campApp', {
+mongoose.connect(dbUrl, {
     // オプション
     useNewUrlParser: true,
     useUnifiedTopology: true,
