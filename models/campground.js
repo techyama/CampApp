@@ -4,14 +4,19 @@ const review = require('./review');
 const Schema = mongoose.Schema;
 
 // スキーマ定義
+const imageSchema = new Schema({
+    url: String,
+    filename: String
+});
+// バーチャル定義なのでmongoDBに登録する必要のないプロパティ
+imageSchema.virtual('thumbnail').get(function() {
+    // cloudinaryとwidth200で画像のやり取りをする
+    return this.url.replace('/upload', '/upload/w_200');
+});
+
 const campgroundSchema = new Schema({
     title: String,
-    images: [
-        {
-            url: String,
-            filename: String
-        }
-    ],
+    images: [imageSchema],
     price: Number,
     description: String,
     location: String,

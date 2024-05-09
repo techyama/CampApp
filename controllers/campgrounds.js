@@ -1,3 +1,5 @@
+// モジュールのインポート
+const { cloudinary } = require('../cloudinary')
 // モデルのインポート
 const Campground = require('../models/campground');
 
@@ -68,6 +70,15 @@ module.exports.updateCampground = async (req, res) => {
     // スプレッド構文でカンマ区切りでプッシュ
     campground.images.push(...imgs);
     await campground.save();
+    // 画像削除
+    if (req.body.deleteImages) {
+        // cloudinaryから削除
+        for (let filename of req.body.deleteImages) {
+            await cloudinary.uploader.destroy(filename);
+        }
+        // ファイルネームが一致するものを取り除いて更新
+        await campground.updateOne({ $pull: { images: { filename: { $in: req.body.deleteImages } } } });
+    }
     // 更新成功時フラッシュ表示
     req.flash('success', 'キャンプ場を更新しました');
     // 更新したデータの詳細ページへリダイレクト

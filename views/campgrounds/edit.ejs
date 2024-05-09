@@ -41,6 +41,16 @@
                 <input class="form-control" type="file" name="image" id="image" multiple>
             </div>
             <div class="mb-3">
+                <% campground.images.forEach(function(img, i) { %>
+                    <img src="<%= img.thumbnail %>" class="img-thumbnail" alt="">
+                    <!-- 削除対象の画像を配列で渡す -->
+                    <div class="form-check-inline">
+                        <input type="checkbox" name="deleteImages[]" id="image-<%= i %>" value="<%= img.filename %>">
+                    </div>
+                    <label for="image-<%= i %>">削除する</label>
+                <% }) %>
+            </div>
+            <div class="mb-3">
                 <button class="btn btn-info">更新する</button>
             </div>
         </form>
