@@ -1,7 +1,7 @@
 <% layout('layouts/templete') %>
 <div class="row">
     <h1 class="text-center">キャンプ場の編集</h1>
-    <div class="offset-3 col-6">
+    <div class="offset-md-3 col-md-6">
         <!-- Expressで使えるPUTで送信する -->
         <form action="/campgrounds/<%= campground._id %>?_method=PUT" method="POST" class="validated-form" novalidate enctype="multipart/form-data">
             <div class="mb-3">
