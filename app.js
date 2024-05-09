@@ -28,6 +28,7 @@ const LocalStrategy = require('passport-local');
 const User = require('./models/user');
 // セキュリティ対策ライブラリ
 const mongoSanitize = require('express-mongo-sanitize');
+const helmet = require('helmet');
 
 // 接続が成功したか否か確認
 mongoose.connect('mongodb://localhost:27017/campApp', {
@@ -106,6 +107,43 @@ app.use((req, res, next) => {
 // サニタイジングミドルウェア
 app.use(mongoSanitize());
 
+// セキュリティヘッダーミドルウェア
+app.use(helmet());
+
+// コンテンツセキュリティポリシーで許可するURL設定
+const scriptSrcUrls = [
+    'https://api.mapbox.com',
+    'https://cdn.jsdelivr.net'
+];
+const styleSrcUrls = [
+    'https://api.mapbox.com',
+    'https://cdn.jsdelivr.net'
+];
+const connectSrcUrls = [
+    'https://api.mapbox.com',
+    'https://*.tiles.mapbox.com',
+    'https://events.mapbox.com'
+];
+const fontSrcUrls = [];
+const imgSrcUrls = [
+    `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/`,
+    'https://images.unsplash.com'
+];
+
+// コンテンツセキュリティポリシー(CSP)のディレクティブ設定
+app.use(helmet.contentSecurityPolicy({
+    directives: {
+        defaultSrc: [],
+        connectSrc: ["'self'", ...connectSrcUrls],
+        scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
+        styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+        workerSrc: ["'self'", "blob:"],
+        childSrc: ["blob:"],
+        objectSrc: [],
+        imgSrc: ["'self'", 'blob:', 'data:', ...imgSrcUrls],
+        fontSrc: ["'self'", ...fontSrcUrls]
+    }
+}));
 
 // サーバー起動
 app.listen(port, () => {
