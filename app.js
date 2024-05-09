@@ -26,6 +26,8 @@ const userRoutes = require('./routes/users');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const User = require('./models/user');
+// セキュリティ対策ライブラリ
+const mongoSanitize = require('express-mongo-sanitize');
 
 // 接続が成功したか否か確認
 mongoose.connect('mongodb://localhost:27017/campApp', {
@@ -96,6 +98,9 @@ app.use((req, res, next) => {
     res.locals.error = req.flash('error');
     next();
 });
+
+// サニタイジングミドルウェア
+app.use(mongoSanitize());
 
 
 // サーバー起動
