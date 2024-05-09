@@ -29,7 +29,7 @@ router.route('/:id')
     // 詳細ページ
     .get(catchAsync(campgrounds.showCampground))
     // 編集
-    .put(isLoggedIn, isCampAuthor, validateCampground, catchAsync(campgrounds.updateCampground))
+    .put(isLoggedIn, isCampAuthor, upload.array('image'), validateCampground, catchAsync(campgrounds.updateCampground))
     // 削除
     .delete(isLoggedIn, isCampAuthor, catchAsync(campgrounds.deleteCampground));
 

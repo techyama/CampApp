@@ -63,6 +63,11 @@ module.exports.updateCampground = async (req, res) => {
     // パスパラメータのIDを持つデータをフォームから受け取った値で更新
     const id = req.params.id;
     const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
+    // Cloudinaryをインポートしているためreqからファイルオブジェクトも受け取れる
+    const imgs = req.files.map(f => ({ url: f.path, filename: f.filename }));
+    // スプレッド構文でカンマ区切りでプッシュ
+    campground.images.push(...imgs);
+    await campground.save();
     // 更新成功時フラッシュ表示
     req.flash('success', 'キャンプ場を更新しました');
     // 更新したデータの詳細ページへリダイレクト
