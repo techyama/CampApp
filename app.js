@@ -64,6 +64,8 @@ app.set('view engine', 'ejs');
 
 // セッション有効化
 const sessionConfig = {
+    // セッション名を変更できる
+    name: 'hoge',
     // 本来は秘密鍵が好ましい
     secret: 'mysecret',
     resave: false,
@@ -71,6 +73,8 @@ const sessionConfig = {
     cookie: {
         // HTTP接続のみ受け付ける
         httpOnly: true,
+        // HTTPS通信のみクッキーのやり取りをする(ローカル環境ではHTML通信なのでデプロイ時に適用)
+        // secure: true,
         // 有効期限(ミリ秒)7日
         maxAge: 1000 * 60 * 60 * 24 * 7
     }

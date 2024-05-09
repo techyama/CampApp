@@ -3,7 +3,10 @@
     <div class="offset-1 col-10">
         <div class="alert alert-danger" role="alert">
             <h4 class="alert-heading"><%= err.message %></h4>
-            <p><%= err.stack %></p>
+            <!-- Node.jsの環境変数が本番用で動いていないときに読み込む -->
+            <% if (process.env.NODE_ENV !== 'production') { %>
+                <p><%= err.stack %></p>
+            <% } %>
         </div>
     </div>
 </div>
