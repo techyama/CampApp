@@ -34,6 +34,8 @@ module.exports.showCampground = async (req, res) => {
 module.exports.createCampground = async (req, res) => {
     // フォームから受け取った値で登録
     const campground = new Campground(req.body.campground);
+    // Cloudinaryをインポートしているためreqからファイルオブジェクトも受け取れる
+    campground.images = req.files.map(f => ({ url: f.path, filename: f.filename }));
     // passportの持つユーザー情報からidをautorプロパティに代入
     campground.author = req.user._id;
     await campground.save();
