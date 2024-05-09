@@ -2,6 +2,11 @@
 const express = require('express');
 const router = express.Router();
 const catchAsync = require('../utils/catchAsync');
+const multer = require('multer');
+// 自動でindex.jsを見に行くため/index.js省略可
+const { storage } = require('../cloudinary');
+// ファイルアップロード先
+const upload = multer({ storage });
 // コントローラーのインポート
 const campgrounds = require('../controllers/campgrounds');
 // ミドルウェアのインポート
@@ -12,7 +17,7 @@ router.route('/')
     // 一覧取得ページ
     .get(catchAsync(campgrounds.index))
     // 新規登録
-    .post(isLoggedIn, validateCampground, catchAsync(campgrounds.createCampground));
+    .post(isLoggedIn, upload.array('image'), validateCampground, catchAsync(campgrounds.createCampground));
 
 
 
@@ -24,7 +29,7 @@ router.route('/:id')
     // 詳細ページ
     .get(catchAsync(campgrounds.showCampground))
     // 編集
-    .put(isLoggedIn, isCampAuthor, validateCampground, catchAsync(campgrounds.updateCampground))
+    .put(isLoggedIn, isCampAuthor, upload.array('image'), validateCampground, catchAsync(campgrounds.updateCampground))
     // 削除
     .delete(isLoggedIn, isCampAuthor, catchAsync(campgrounds.deleteCampground));
 

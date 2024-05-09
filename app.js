@@ -1,3 +1,8 @@
+// Node.jsの環境変数が本番用で動いていないときに読み込む
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+
 // モジュールのインポート
 const path = require('path');
 const express = require('express');
@@ -21,9 +26,16 @@ const userRoutes = require('./routes/users');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const User = require('./models/user');
+// セキュリティ対策ライブラリ
+const mongoSanitize = require('express-mongo-sanitize');
+const helmet = require('helmet');
 
+// atlas接続
+dbUrl = process.env.DB_URL;
+
+// 'mongodb://localhost:27017/campApp'
 // 接続が成功したか否か確認
-mongoose.connect('mongodb://localhost:27017/campApp', {
+mongoose.connect(dbUrl, {
     // オプション
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -57,6 +69,8 @@ app.set('view engine', 'ejs');
 
 // セッション有効化
 const sessionConfig = {
+    // セッション名を変更できる
+    name: 'hoge',
     // 本来は秘密鍵が好ましい
     secret: 'mysecret',
     resave: false,
@@ -64,6 +78,8 @@ const sessionConfig = {
     cookie: {
         // HTTP接続のみ受け付ける
         httpOnly: true,
+        // HTTPS通信のみクッキーのやり取りをする(ローカル環境ではHTML通信なのでデプロイ時に適用)
+        // secure: true,
         // 有効期限(ミリ秒)7日
         maxAge: 1000 * 60 * 60 * 24 * 7
     }
@@ -92,6 +108,46 @@ app.use((req, res, next) => {
     next();
 });
 
+// サニタイジングミドルウェア
+app.use(mongoSanitize());
+
+// セキュリティヘッダーミドルウェア
+app.use(helmet());
+
+// コンテンツセキュリティポリシーで許可するURL設定
+const scriptSrcUrls = [
+    'https://api.mapbox.com',
+    'https://cdn.jsdelivr.net'
+];
+const styleSrcUrls = [
+    'https://api.mapbox.com',
+    'https://cdn.jsdelivr.net'
+];
+const connectSrcUrls = [
+    'https://api.mapbox.com',
+    'https://*.tiles.mapbox.com',
+    'https://events.mapbox.com'
+];
+const fontSrcUrls = [];
+const imgSrcUrls = [
+    `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/`,
+    'https://images.unsplash.com'
+];
+
+// コンテンツセキュリティポリシー(CSP)のディレクティブ設定
+app.use(helmet.contentSecurityPolicy({
+    directives: {
+        defaultSrc: [],
+        connectSrc: ["'self'", ...connectSrcUrls],
+        scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
+        styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+        workerSrc: ["'self'", "blob:"],
+        childSrc: ["blob:"],
+        objectSrc: [],
+        imgSrc: ["'self'", 'blob:', 'data:', ...imgSrcUrls],
+        fontSrc: ["'self'", ...fontSrcUrls]
+    }
+}));
 
 // サーバー起動
 app.listen(port, () => {

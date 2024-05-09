@@ -1,16 +1,43 @@
 // モジュールのインポート
-const Joi = require('joi');
+const BaseJoi = require('joi');
 const review = require('./models/review');
+// サニタイズ用モジュール
+const sanitizeHtml = require('sanitize-html');
+
+// 拡張機能
+const extension = (joi) => ({
+    type: 'string',
+    base: joi.string(),
+    messages: {
+        'string.escapeHTML': '{{#label}} must not include HTML!'
+    },
+    rules: {
+        escapeHTML: {
+            validate(value, helpers) {
+                const clean = sanitizeHtml(value, {
+                    allowedTags: [],
+                    allowedAttributes: {},
+                });
+                if (clean !== value) return helpers.error('string.escapeHTML', { value })
+                return clean;
+            }
+        }
+    }
+});
+
+// デフォルトのJoiに拡張機能を継承する
+const Joi = BaseJoi.extend(extension);
+
 
 // バリデーションスキーマの定義をエクスポート
 module.exports.campgroundSchema = Joi.object({
     campground: Joi.object({
         title: Joi.string().required(),
         price: Joi.number().required().min(0),
-        image: Joi.string().required(),
         location: Joi.string().required(),
         description: Joi.string().required()
-    }).required()
+    }).required(),
+    deleteImages: Joi.array()
 });
 
 module.exports.reviewSchema = Joi.object({

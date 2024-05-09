@@ -1,3 +1,5 @@
+// モジュールのインポート
+const { cloudinary } = require('../cloudinary')
 // モデルのインポート
 const Campground = require('../models/campground');
 
@@ -34,6 +36,8 @@ module.exports.showCampground = async (req, res) => {
 module.exports.createCampground = async (req, res) => {
     // フォームから受け取った値で登録
     const campground = new Campground(req.body.campground);
+    // Cloudinaryをインポートしているためreqからファイルオブジェクトも受け取れる
+    campground.images = req.files.map(f => ({ url: f.path, filename: f.filename }));
     // passportの持つユーザー情報からidをautorプロパティに代入
     campground.author = req.user._id;
     await campground.save();
@@ -61,6 +65,20 @@ module.exports.updateCampground = async (req, res) => {
     // パスパラメータのIDを持つデータをフォームから受け取った値で更新
     const id = req.params.id;
     const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
+    // Cloudinaryをインポートしているためreqからファイルオブジェクトも受け取れる
+    const imgs = req.files.map(f => ({ url: f.path, filename: f.filename }));
+    // スプレッド構文でカンマ区切りでプッシュ
+    campground.images.push(...imgs);
+    await campground.save();
+    // 画像削除
+    if (req.body.deleteImages) {
+        // cloudinaryから削除
+        for (let filename of req.body.deleteImages) {
+            await cloudinary.uploader.destroy(filename);
+        }
+        // ファイルネームが一致するものを取り除いて更新
+        await campground.updateOne({ $pull: { images: { filename: { $in: req.body.deleteImages } } } });
+    }
     // 更新成功時フラッシュ表示
     req.flash('success', 'キャンプ場を更新しました');
     // 更新したデータの詳細ページへリダイレクト

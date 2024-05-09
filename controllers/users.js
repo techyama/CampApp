@@ -21,7 +21,7 @@ module.exports.register = async (req, res, next) => {
             // 成功時フラッシュ表示
             req.flash('success', 'ようこそ！');
             // ホーム画面へリダイレクト
-            res.redirect('/')
+            res.redirect('/campgrounds')
         });
     } catch (e) {
         // エラー時フラッシュ表示
@@ -42,7 +42,7 @@ module.exports.login = async (req, res) => {
     // セッションからログイン後の画面を取得しリダイレクト
     // 短絡評価でセッションが無ければホーム画面を表示
     console.log(req.session.returnTo);
-    const redirectUrl = req.session.returnTo || '/';
+    const redirectUrl = req.session.returnTo || '/campgrounds';
     // セッション削除
     delete req.session.returnTo;
     res.redirect(redirectUrl);
